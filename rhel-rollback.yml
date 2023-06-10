@@ -1,0 +1,23 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  tasks:
+  - name: Find the ID of the last yum transaction
+    shell: yum history | sed -n 4p | awk -F "|" '{ print $1 }'
+    register: transaction_id
+  
+  - debug: var=transaction_id.stdout
+    when: transaction_id.stderr == ""
+
+  - name: Get info on that transaction
+    command: yum history info {{ transaction_id.stdout }}
+    register: transaction_info
+    when: transaction_id.stderr == ""
+
+  - debug: var=transaction_info.stdout_lines
+    when: transaction_id.stderr == ""
+
+  - name: Undo that transaction now
+    command: yum -y history undo {{ transaction_id.stdout }}
+    when: transaction_id.stderr == ""
