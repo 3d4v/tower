@@ -5,8 +5,6 @@
   tasks:
   - name: Upgrade all RHEL packages
     yum:
-      name: '*'
-      disablerepo: "*"
-      enablerepo: "rhel*"
+      name: '*'    
       state: latest
      
