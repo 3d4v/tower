@@ -1,0 +1,12 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  tasks:
+  - name: Upgrade all RHEL packages
+    yum:
+      name: '*'
+      disablerepo: "*"
+      enablerepo: "rhel*"
+      state: latest
+     
