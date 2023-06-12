@@ -1,0 +1,29 @@
+---
+- name: Rollback Red Hat OS
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Stop packagekit service
+      service:
+        name: packagekit
+        state: stopped
+
+    - name: Rollback using yum history
+      yum:
+        name: '*'
+        state: present
+        enablerepo: '*'
+        disable_excludes: main,updates
+        security: no
+        bugfix: no
+        state: latest
+        installonly_limit: 3
+        use_previous: yes
+        skip_broken: yes
+      register: yum_rollback_result
+
+    - name: Check if rollback was successful
+      debug:
+        msg: "Rollback successful"
+      when: yum_rollback_result.changed
