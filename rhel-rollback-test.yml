@@ -11,7 +11,7 @@
         state: stopped
 
     - name: Rollback using dnf history
-      ansible.posix.dnf:
+      community.general.dnf:
         name: '*'
         state: latest
         disable_gpg_check: yes
@@ -21,7 +21,7 @@
       register: dnf_rollback_result
 
     - name: Revert packages
-      ansible.posix.dnf:
+      community.general.dnf:
         name: "{{ item.name }}"
         state: present
       loop: "{{ dnf_rollback_result.results }}"
