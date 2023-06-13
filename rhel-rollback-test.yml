@@ -1,5 +1,5 @@
 ---
-- name: Rollback Red Hat OS
+- name: Rollback RHEL Server
   hosts: your_target_hosts
   gather_facts: true
   become: true
@@ -9,25 +9,25 @@
       service:
         name: packagekit
         state: stopped
+        enabled: no
 
-    - name: Rollback using dnf history
-      community.general.dnf:
+    - name: Rollback using yum history
+      yum:
         name: '*'
         state: latest
         disable_gpg_check: yes
-        disable_excludes: main,updates
-        skip_broken: yes
-        list_only: yes
-      register: dnf_rollback_result
+        exclude: kernel*
+      register: yum_rollback_result
 
     - name: Revert packages
-      community.general.dnf:
+      yum:
         name: "{{ item.name }}"
         state: present
-      loop: "{{ dnf_rollback_result.results }}"
-      when: item.state == "removed"
+        disable_gpg_check: yes
+      loop: "{{ yum_rollback_result.results | selectattr('state', 'equalto', 'absent') | list }}"
+      when: yum_rollback_result.changed
 
     - name: Check if rollback was successful
       debug:
         msg: "Rollback successful"
-      when: dnf_rollback_result.changed
+      when: yum_rollback_result.changed
