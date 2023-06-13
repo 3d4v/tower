@@ -1,7 +1,8 @@
 ---
 - name: Rollback Red Hat OS
-  hosts: all
+  hosts: your_target_hosts
   gather_facts: true
+  become: true
 
   tasks:
     - name: Stop packagekit service
@@ -9,21 +10,24 @@
         name: packagekit
         state: stopped
 
-    - name: Rollback using yum history
-      yum:
+    - name: Rollback using dnf history
+      ansible.posix.dnf:
         name: '*'
-        state: present
-        enablerepo: '*'
-        disable_excludes: main,updates
-        security: no
-        bugfix: no
         state: latest
-        installonly_limit: 3
-        use_previous: yes
+        disable_gpg_check: yes
+        disable_excludes: main,updates
         skip_broken: yes
-      register: yum_rollback_result
+        list_only: yes
+      register: dnf_rollback_result
+
+    - name: Revert packages
+      ansible.posix.dnf:
+        name: "{{ item.name }}"
+        state: present
+      loop: "{{ dnf_rollback_result.results }}"
+      when: item.state == "removed"
 
     - name: Check if rollback was successful
       debug:
         msg: "Rollback successful"
-      when: yum_rollback_result.changed
+      when: dnf_rollback_result.changed
